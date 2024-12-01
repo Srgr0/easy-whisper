@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easy-whisper</title>
+    <script>
+        function startProcessing() {
+            const logArea = document.getElementById("log");
+            logArea.innerHTML = "Processing started...<br>";
+
+            const form = document.getElementById("audio-form");
+            const formData = new FormData(form);
+
+            fetch("/", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                function read() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            logArea.innerHTML += "<br>Processing complete!";
+                            return;
+                        }
+                        logArea.innerHTML += decoder.decode(value);
+                        logArea.scrollTop = logArea.scrollHeight;
+                        read();
+                    });
+                }
+
+                read();
+            }).catch(error => {
+                logArea.innerHTML += `<br>Error: ${error}`;
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>easy-whisper</h1>
+    <form id="audio-form" onsubmit="event.preventDefault(); startProcessing();" enctype="multipart/form-data">
+        <label for="url">YouTube URL:</label>
+        <input type="text" name="url" id="url"><br><br>
+        <label for="file">Upload File:</label>
+        <input type="file" name="file" id="file"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="log" style="border: 1px solid #ccc; padding: 10px; margin-top: 20px; height: 300px; overflow-y: scroll;"></div>
+</body>
+</html>
